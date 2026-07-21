@@ -1,0 +1,8 @@
+{
+  "name": "BAUM 92",
+  "short_name": "BAUM92",
+  "display": "standalone",
+  "start_url": "/baum92/index.html",
+  "background_color": "#f8fafc",
+  "theme_color": "#6366f1"
+}
