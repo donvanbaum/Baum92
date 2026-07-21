@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BAUM 92</title>
+<link rel="manifest" href="/baum92/manifest.json">
+<meta name="theme-color" content="#6366f1">
+<style>
+  :root {
+    --primary: #6366f1; 
+    --primary-glow: rgba(99, 102, 241, 0.4);
+    --surface: #ffffff;
+    --background: #f8fafc;
+    --border: #e2e8f0;
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    --radius-lg: 16px;
+    --radius-md: 8px;
+    --radius-full: 9999px;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--background);
+    color: var(--text-main);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 40px;
+    padding-bottom: 40px;
+    margin: 0;
+  }
+
+  .app-header {
+    width: 320px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  .app-title {
+    font-weight: 800;
+    font-size: 22px;
+    letter-spacing: -0.5px;
+    margin: 0;
+  }
+
+  .profile-icon {
+    width: 36px;
+    height: 36px;
+    background: #cbd5e1;
+    border-radius: var(--radius-full);
+    cursor: pointer;
+  }
+
+  .weekly-nav {
+    width: 320px;
+    background: var(--surface);
+    padding: 16px 20px;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    box-sizing: border-box;
+    margin-bottom: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 8px;
+  }
+
+  .progress-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .progress-percentage {
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--primary);
+  }
+
+  .progress-track {
+    width: 100%;
+    height: 12px;
+    background-color: var(--border);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background-color: var(--primary);
+    width: 0%;
+    border-radius: var(--radius-full);
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .days-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .day-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-md);
+    border: 2px solid transparent;
+    background-color: transparent;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 700;
+    display: grid;
+    place-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 0;
+  }
+
+  .day-btn.completed {
+    background-color: var(--primary);
+    color: white;
+  }
+
+  .day-btn.active {
+    border-color: var(--primary);
+    color: var(--text-main);
+  }
+
+  .day-btn:hover:not(.completed):not(.active) {
+    background-color: #f1f5f9;
+  }
+
+  .modules-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .gradio-card {
+    background: var(--surface);
+    width: 320px;
+    padding: 24px;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+    box-sizing: border-box;
+    transition: all 0.3s ease;
+  }
+
+  .master-task {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .master-task.expanded {
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 20px;
+  }
+
+  .master-task-text {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .master-title {
+    font-weight: 600;
+    font-size: 16px;
+    color: var(--text-main);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .master-subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 2px;
+    transition: color 0.3s ease;
+  }
+
+  .gradio {
+    --fill: 0%;
+    width: 28px;
+    height: 28px;
+    border-radius: var(--radius-full);
+    border: 2px solid #cbd5e1;
+    background: linear-gradient(to top, var(--primary) var(--fill), transparent var(--fill));
+    transition: --fill 0.4s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s ease;
+    flex-shrink: 0;
+  }
+
+  .gradio.active { border-color: var(--primary); }
+  .gradio.complete {
+    background: var(--primary);
+    border-color: var(--primary);
+    animation: radiate 0.6s cubic-bezier(0, 0, 0.2, 1) forwards;
+  }
+
+  @keyframes radiate {
+    0% { box-shadow: 0 0 0 0 var(--primary); }
+    70% { box-shadow: 0 0 0 10px var(--primary-glow); }
+    100% { box-shadow: 0 0 0 14px rgba(99, 102, 241, 0); }
+  }
+
+  .subtasks {
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .subtasks.expanded { display: flex; }
+
+  .subtask-container {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .subtask-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    transition: background-color 0.2s ease;
+  }
+
+  .subtask-header:hover { background-color: #f1f5f9; }
+
+  .subtask-check {
+    appearance: none;
+    margin: 0;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #cbd5e1;
+    border-radius: var(--radius-full);
+    cursor: pointer;
+    display: grid;
+    place-content: center;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    flex-shrink: 0;
+  }
+
+  .subtask-check::before {
+    content: "";
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    transform: scale(0);
+    transition: 120ms transform ease-in-out;
+    box-shadow: inset 10px 10px white;
+  }
+
+  .subtask-check:checked {
+    background-color: var(--primary);
+    border-color: var(--primary);
+  }
+  .subtask-check:checked::before { transform: scale(1); }
+
+  .subtask-text {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-main);
+    cursor: pointer;
+    flex-grow: 1;
+    position: relative;
+    user-select: none;
+  }
+
+  .subtask-check:checked + .subtask-text {
+    color: var(--text-muted);
+  }
+  .subtask-check:checked + .subtask-text::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 100%;
+    height: 1.5px;
+    background-color: var(--text-muted);
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .subtask-details {
+    display: none;
+    padding: 4px 12px 12px 46px;
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+  .subtask-details.expanded { display: block; }
+  .subtask-details ul { padding-left: 16px; margin: 4px 0; }
+  .subtask-details p { margin: 4px 0; }
+
+</style>
+</head>
+<body>
+
+  <div class="app-header">
+    <h1 class="app-title">BAUM 92</h1>
+    <div class="profile-icon"></div>
+  </div>
+
+  <div class="weekly-nav">
+    <div class="progress-container">
+      <div class="progress-header">
+        <span class="progress-title">Program Complete</span>
+        <span class="progress-percentage" id="master-percentage">0%</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="master-bar"></div>
+      </div>
+    </div>
+    
+    <div class="days-row" id="days-nav">
+      <!-- Generated by JS -->
+    </div>
+  </div>
+
+  <div class="modules-container">
+
+    <div class="gradio-card" id="module-morning">
+      <div class="master-task" onclick="toggleMainAccordion('morning')">
+        <div class="gradio" id="gradio-morning"></div>
+        <div class="master-task-text">
+          <span class="master-title">MORNING</span>
+          <span class="master-subtitle" id="label-morning">0 of 6 completed</span>
+        </div>
+      </div>
+      <div class="subtasks" id="subtasks-morning"></div>
+    </div>
+
+    <div class="gradio-card" id="module-training">
+      <div class="master-task" onclick="toggleMainAccordion('training')">
+        <div class="gradio" id="gradio-training"></div>
+        <div class="master-task-text">
+          <span class="master-title">TRAINING</span>
+          <span class="master-subtitle" id="label-training">0 completed</span>
+        </div>
+      </div>
+      <div class="subtasks" id="subtasks-training"></div>
+    </div>
+
+    <div class="gradio-card" id="module-evening">
+      <div class="master-task" onclick="toggleMainAccordion('evening')">
+        <div class="gradio" id="gradio-evening"></div>
+        <div class="master-task-text">
+          <span class="master-title">EVENING</span>
+          <span class="master-subtitle" id="label-evening">0 of 4 completed</span>
+        </div>
+      </div>
+      <div class="subtasks" id="subtasks-evening"></div>
+    </div>
+
+  </div>
+
+  <script>
+    try {
+      CSS.registerProperty({
+        name: '--fill',
+        syntax: '<percentage>',
+        inherits: false,
+        initialValue: '0%'
+      });
+    } catch(e) {}
+
+    const staticMorning = [
+      { label: 'Lord’s Prayer', details: '<p>Our Father, who art in heaven, hallowed be thy name; thy kingdom come; thy will be done, on earth as it is in heaven.</p><p>Give us this day our daily bread. And forgive us our trespasses, as we forgive those who trespass against us.</p><p>And lead us not into temptation; but deliver us from evil.</p>' },
+      { label: 'Breath work', details: '<p><strong>9 Purifications:</strong> 3 in right nostril, out left. 3 in left, out right. 3 inhale/exhale both. Visualize good universal energy in, harmful energy out.</p><p><strong>Followed by 1-3 rounds of:</strong> Wim Hof breathing, Bhastrika pranayama, free diving breath table, or lying relaxing breathing.</p>' },
+      { label: 'Vacuums', details: '<ul><li>Standing or hypopressives (lying/kneeling/standing).</li><li>Posture: Tucked chin and pelvis, wide back, 360-degree breathing. Neck supported with a towel, towel in a circle under sacrum.</li><li>Execution: 3 deep breaths, pull vacuum, perineum pull, suction tongue to roof of mouth. Hold, relax.</li><li>Volume: 3 hand positions (navel, heart, head). 1 hold per position.</li></ul>' },
+      { label: 'Core work', details: '<p>AMRAP of chosen exercise: V-ups, leg raises, lying leg extensions, or Dutch side crunches.</p>' },
+      { label: 'Zhiné', details: '<ul><li>Place object 1.5ft in front, eye level. Legs crossed, hands folded palms up. Spine straight, head tilted slightly down.</li><li>Look straight ahead, hold mind entirely on object. No analysis. Soften breath. Body relaxed and entirely still. Do not shift, swallow, or blink.</li><li>If mind wanders, gently bring it back.</li></ul>' },
+      { label: 'Imagination', details: '<p>SATS: Define exact desire. Construct brief, 1st-person scene implying fulfillment. Lie down, relax into drowsy state. Loop scene mentally, feel the physical reality. Fall asleep in state.</p>' }
+    ];
+
+    const staticEvening = [
+      { label: 'Bed Time Ritual', details: '<p>Wash face, brush teeth and tongue.</p>' },
+      { label: 'Prayer and Gratitude', details: '<p>[Details pending input]</p>' },
+      { label: 'Rückschau', details: '<p>Find quiet space. Mentally trace steps backward from sitting down to waking up.</p><p>Form clear, detached picture of actions. Resist self-judgment. Remember emotions felt.</p><p>Checkpoints: Bedtime, Evening, Afternoon, Midday, Morning, Waking up.</p>' },
+      { label: 'Imagination', details: '<p>Perform Goddard SATS practice. Fall asleep in the state of the wish fulfilled.</p>' }
+    ];
+
+    const weeklyTrainingMap = {
+      0: [ // Mon
+        { label: 'Posterior Lift', details: '<p>Execute programmed Posterior lift (1 of 3).</p>' },
+        { label: 'Sprint Track Run', details: '<p>Execute track sprint workout (1 of 2 runs).</p>' },
+        { label: 'Yoga', details: '<p>Execute flexibility protocol following the lift/run stack.</p>' }
+      ],
+      1: [ // Tue
+        { label: 'Anterior Lift', details: '<p>Execute programmed Anterior lift (2 of 3).</p>' },
+        { label: 'Yoga', details: '<p>Execute flexibility protocol following the lift.</p>' }
+      ],
+      2: [ // Wed
+        { label: 'Recovery', details: '<p>No training or running. Rest and recover.</p>' }
+      ],
+      3: [ // Thu
+        { label: 'Free Lift', details: '<p>Execute programmed Free lift (3 of 3).</p>' },
+        { label: 'Yoga', details: '<p>Execute flexibility protocol following the lift.</p>' }
+      ],
+      4: [ // Fri
+        { label: 'Recovery', details: '<p>No training or running. Rest and recover.</p>' }
+      ],
+      5: [ // Sat
+        { label: 'Recovery', details: '<p>No training or running. Rest and recover.</p>' }
+      ],
+      6: [ // Sun
+        { label: 'Long Run', details: '<p>Execute long run (2 of 2 runs).</p>' },
+        { label: 'Yoga', details: '<p>Execute flexibility protocol following the run.</p>' }
+      ]
+    };
+
+    const daysConfig = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+    
+    // State Store
+    let appState = [];
+    let totalTasksWeekly = 0;
+    let activeDayIndex = 0; // Starts on Monday (0)
+
+    function saveState() {
+      localStorage.setItem('BAUM92_State', JSON.stringify(appState));
+    }
+
+    function initData() {
+      const savedState = localStorage.getItem('BAUM92_State');
+      
+      if (savedState) {
+        appState = JSON.parse(savedState);
+        totalTasksWeekly = 0;
+        appState.forEach(day => {
+          totalTasksWeekly += (day.modules.morning.length + day.modules.training.length + day.modules.evening.length);
+        });
+      } else {
+        daysConfig.forEach((dayChar, index) => {
+          const morningTasks = staticMorning.map(t => ({...t, done: false}));
+          const trainingTasks = weeklyTrainingMap[index].map(t => ({...t, done: false}));
+          const eveningTasks = staticEvening.map(t => ({...t, done: false}));
+          
+          appState.push({
+            char: dayChar,
+            modules: { morning: morningTasks, training: trainingTasks, evening: eveningTasks }
+          });
+          totalTasksWeekly += (morningTasks.length + trainingTasks.length + eveningTasks.length);
+        });
+        saveState();
+      }
+    }
+
+    function renderDaysNav() {
+      const navContainer = document.getElementById('days-nav');
+      navContainer.innerHTML = '';
+      appState.forEach((dayData, i) => {
+        const isCompleted = isDayComplete(i);
+        const isActive = (i === activeDayIndex);
+        
+        let classes = 'day-btn';
+        if (isCompleted) classes += ' completed';
+        if (isActive) classes += ' active';
+
+        navContainer.innerHTML += `<button class="${classes}" onclick="switchDay(${i})">${dayData.char}</button>`;
+      });
+    }
+
+    function switchDay(index) {
+      activeDayIndex = index;
+      document.querySelectorAll('.master-task').forEach(el => el.classList.remove('expanded'));
+      document.querySelectorAll('.subtasks').forEach(el => el.classList.remove('expanded'));
+      renderDaysNav();
+      renderTasks();
+      updateAllGradios();
+    }
+
+    function renderTasks() {
+      const dayData = appState[activeDayIndex].modules;
+      ['morning', 'training', 'evening'].forEach(mod => {
+        const container = document.getElementById(`subtasks-${mod}`);
+        container.innerHTML = '';
+        dayData[mod].forEach((task, taskIndex) => {
+          container.innerHTML += `
+            <div class="subtask-container">
+              <div class="subtask-header">
+                <input type="checkbox" class="subtask-check" ${task.done ? 'checked' : ''} onchange="toggleTask('${mod}', ${taskIndex})">
+                <span class="subtask-text" onclick="toggleDetails(this)">${task.label}</span>
+              </div>
+              <div class="subtask-details">${task.details}</div>
+            </div>
+          `;
+        });
+      });
+    }
+
+    function toggleTask(moduleName, taskIndex) {
+      const task = appState[activeDayIndex].modules[moduleName][taskIndex];
+      task.done = !task.done;
+      saveState(); 
+      updateAllGradios();
+      renderDaysNav(); 
+      updateWeeklyProgress();
+    }
+
+    function updateAllGradios() {
+      ['morning', 'training', 'evening'].forEach(mod => {
+        const tasks = appState[activeDayIndex].modules[mod];
+        const total = tasks.length;
+        const done = tasks.filter(t => t.done).length;
+        
+        const gradio = document.getElementById(`gradio-${mod}`);
+        const label = document.getElementById(`label-${mod}`);
+        
+        if (total === 0) return; // Safeguard
+
+        const pct = (done / total) * 100;
+        gradio.style.setProperty('--fill', `${pct}%`);
+        
+        if (done === 0) {
+          gradio.className = 'gradio';
+          label.innerText = `0 of ${total} completed`;
+          label.style.color = 'var(--text-muted)';
+        } else if (done < total) {
+          gradio.className = 'gradio active';
+          label.innerText = `${done} of ${total} completed`;
+          label.style.color = 'var(--text-muted)';
+        } else {
+          gradio.className = 'gradio active complete';
+          label.innerText = `All tasks complete!`;
+          label.style.color = 'var(--primary)';
+        }
+      });
+    }
+
+    function updateWeeklyProgress() {
+      let completedCount = 0;
+      appState.forEach(day => {
+        ['morning', 'training', 'evening'].forEach(mod => {
+          completedCount += day.modules[mod].filter(t => t.done).length;
+        });
+      });
+      const pct = Math.round((completedCount / totalTasksWeekly) * 100);
+      document.getElementById('master-percentage').innerText = `${pct}%`;
+      document.getElementById('master-bar').style.width = `${pct}%`;
+    }
+
+    function isDayComplete(dayIndex) {
+      const mods = appState[dayIndex].modules;
+      for (const mod in mods) {
+        if (mods[mod].length > 0 && !mods[mod].every(t => t.done)) return false;
+      }
+      return true;
+    }
+
+    function toggleMainAccordion(moduleId) {
+      document.querySelector(`#module-${moduleId} .master-task`).classList.toggle('expanded');
+      document.getElementById(`subtasks-${moduleId}`).classList.toggle('expanded');
+    }
+
+    function toggleDetails(element) {
+      element.parentElement.nextElementSibling.classList.toggle('expanded');
+    }
+
+    // Initialize logic
+    initData();
+    renderDaysNav();
+    renderTasks();
+    updateAllGradios();
+    updateWeeklyProgress();
+
+    // Service Worker Registration for Offline Capabilities
+    window.addEventListener('load', () => {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/baum92/sw.js')
+          .then(registration => {
+            console.log('ServiceWorker registered');
+          })
+          .catch(error => {
+            console.error('ServiceWorker registration failed:', error);
+          });
+      }
+    });
+  </script>
+</body>
+</html>
